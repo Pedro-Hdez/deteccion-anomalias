@@ -1,37 +1,56 @@
+'''
+    Este script une todos los datos descargados del sistema CLICOM (http://clicom-mex.cicese.mx/)
+    almacenados en archivos csv independientes. 
+    
+    Los csvs originales se encuentran comprimidos en datos/clicom_mex_cicese_sonora.zip. El 
+    dataframe resultante de la unión de los datos se comprimirá y almacenará en el archivo
+    datos/datos_sonora.zip.
+'''
+
+# Se importan las dependencias
 import pandas as pd
 import os
 import shutil
 import zipfile
 from zipfile import ZipFile
+
 # Ruta a la carpeta de datos
 data_path = './datos'
+# Ruta al archivo comprimido que contiene los csvs originales
 zip_file = f"{data_path}/clicom_mex_cicese_sonora.zip"
+# Ruta en donde se descomprimirán todos los csvs para su posterior manejo
 data_folder = f"{data_path}/clicom_mex_cicese_sonora"
 
 
 def readCsvAsDataFrame(file_path):
     """
-        Esta función lee un csv al estilo de CICESE y cambia su formato
-        de acuerdo a las necesidades de este proyecto
+        Esta función lee un csv al estilo del sistema CLICOM y cambia su formato
+        de acuerdo a las necesidades de este proyecto.
         
         Parámetros
         ----------
-        file_path: Ruta hacia el csv que se desea leer
+        file_path: Ruta hacia el csv que se desea leer.
         
         Regresa
         -------
         current_df: Dataframe que contiene la información del csv
-                    pero con el formato corregido
+                    pero con el formato corregido.
     """
-    file = open(file_path) # Se abre el archivo
-    id_estacion = file.readline().split(',')[1].strip() # Se lee el id de la estación
-    nombre_estacion = file.readline().split(',')[1].strip() # Se lee el nombre de la estación
-    coordenadas_geograficas_estacion = file.readline().split(',')[1].strip() # Se leen las coordenadas geográficas de la estación
-    variable = file.readline().split(',')[1].strip() # Se leen la variable que contiene el archivo
-    file.close() # Se cierra el archivo
+    # Se abre el archivo
+    file = open(file_path) 
+    # Se lee el id de la estación
+    id_estacion = file.readline().split(',')[1].strip() 
+    # Se lee el nombre de la estación
+    nombre_estacion = file.readline().split(',')[1].strip() 
+    # Se leen las coordenadas geográficas de la estación
+    coordenadas_geograficas_estacion = file.readline().split(',')[1].strip() 
+    # Se lee la variable que contiene el archivo
+    variable = file.readline().split(',')[1].strip() 
+    # Se cierra el archivo
+    file.close() 
 
-    # Se leen como csv todos los renglones después de la cabecera del archivo. Al mismo tiempo se forma la fecha con las
-    # primeras 3 columnas.
+    # Se leen como csv todos los renglones después de la cabecera del archivo. Al mismo tiempo se 
+    # forma la fecha con las primeras 3 columnas.
     current_df = pd.read_csv(file_path, skiprows=7, parse_dates={'Fecha':[0,1,2]})
     # Se cambia de nombre la columna "Datos" por el nombre de la variable en cuestión
     current_df.rename(columns={'Datos': variable}, inplace=True)
@@ -43,13 +62,14 @@ def readCsvAsDataFrame(file_path):
     
     return current_df
 
-# Se extraen los datos del .zip
+# Se extraen los datos del .zip en la carpeta especificada
 with ZipFile(zip_file, 'r') as zip:
     zip.extractall(data_path)
 
-# Lista de archivos
+# Se crea una lista con los csvs
 archivos = os.listdir(data_folder)
-# Se intenta remover los checkpoints de jupyter
+
+# Se intentan remover los checkpoints de Jupyter en caso de que existan
 try:
     archivos.remove('.ipynb_checkpoints')
 except:
